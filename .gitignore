@@ -1,0 +1,12 @@
+# Google API Secrets
+credentials.json
+token.json
+
+# Local Databases
+email_db/
+
+# Python environment
+__pycache__/
+.env
+venv/
+.ipynb_checkpoints/
