@@ -34,6 +34,37 @@ The system operates in two main phases:
 * **Re-ranking:** A secondary LLM pass ensures the most relevant context is provided to the final prompt.
 * **Response Generation:** Generates a concise answer based strictly on the retrieved email context.
 
+### Technical Deep Dive: Advanced RAG Pipeline
+
+This assistant goes beyond basic "vector search + prompt." 
+
+It uses a multi-stage pipeline to ensure the LLM receives the most relevant context possible:
+
+#### 1. Query Rewriting
+
+Before searching the database, the system uses an LLM to rewrite the user's question into a more descriptive search query. 
+This bridges the gap between how people ask questions and how information is actually phrased in their emails.
+
+#### 2. Hybrid Retrieval & Merging
+
+To maximize coverage, the system performs two parallel searches:
+
+* **Original Query Search**: Finds direct matches for the user's exact wording.
+* **Rewritten Query Search**: Finds semantically related content that might use different keywords.
+The results are then merged to create a comprehensive candidate pool.
+
+#### 3. LLM-Based Re-ranking
+
+Because vector search (ChromaDB) can sometimes return "noisy" results, a secondary LLM pass acts as a re-ranker. 
+
+It evaluates the candidate chunks against the original question and prioritizes only the most relevant snippets for the final answer.
+
+#### 4. Robust Execution
+
+The system implements **Exponential Backoff Retries** (via the `tenacity` library) for all LLM calls. 
+
+This ensures that temporary rate limits or local hardware stutters don't break the application during long-running tasks like ingestion.
+
 ## Setup & Installation
 
 ### Prerequisites
@@ -79,7 +110,7 @@ python app.py
 
 ```
 
-## ⚠️ Limitations & Future Work
+## Limitations & Future Work
 
 * **Performance vs. Privacy Tradeoff:** 
   * Using a local 1b model (Ollama) prioritizes privacy and runs on consumer hardware but may lack the reasoning depth of "frontier" models (e.g., GPT-4o or Llama-3.1-70b).
