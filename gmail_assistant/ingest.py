@@ -77,8 +77,7 @@ class Chunks(BaseModel):
 def fetch_emails(service, max_results):
     emails = []
     # Loop through all of the folders
-    #for folder in get_list_of_folders(service):
-    for folder in ['SPAM']:
+    for folder in get_list_of_folders(service):
         print(f"Looking in {folder} folder.")
         messages = get_email_messages(service, max_results=max_results, folder_name=folder)
         # Extract the details and add them to the emails list of dicts
