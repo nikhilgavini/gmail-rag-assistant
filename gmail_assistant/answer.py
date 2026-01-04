@@ -10,15 +10,10 @@ from gmail_assistant import config
 load_dotenv(override=True)
 
 ###############################################################################
-# MODELS (Chunking and Embedding)
+# MODELS
 ###############################################################################
-## Chunking Model
 MODEL = config.CHUNKING_MODEL
 
-## Local Embedding Model
-local_embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
-    model_name="all-MiniLM-L6-v2"
-)
 ###############################################################################
 # VECTOR DB INFO
 ###############################################################################
