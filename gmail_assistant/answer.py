@@ -36,7 +36,7 @@ RETRIEVAL_K = 20
 FINAL_K = 10
 
 SYSTEM_PROMPT = """
-You are a knowledgeable, friendly assistant to parse through the user's unread and spam emails.
+You are a knowledgeable, friendly assistant to parse through the user's emails.
 You are chatting with a user about their emails.
 Your answer will be evaluated for accuracy, relevance and completeness, so make sure it only answers the question and fully answers it.
 If you don't know the answer, say so.
@@ -105,7 +105,7 @@ def make_rag_messages(question, history, chunks):
 def rewrite_query(question, history=[]):
     """Rewrite the user's question to be a more specific question that is more likely to surface relevant content in the Knowledge Base."""
     message = f"""
-You are in a conversation with a user, answering questions about the company Insurellm.
+You are in a conversation with a user, answering questions about their emails.
 You are about to look up information in a Knowledge Base to answer the user's question.
 
 This is the history of your conversation so far with the user:
