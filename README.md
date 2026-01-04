@@ -4,6 +4,8 @@ A privacy-first Personal Knowledge Worker that transforms your Gmail inbox into 
 
 This project implements a full Retrieval-Augmented Generation (RAG) pipeline using local LLMs (Ollama) to ensure your data never leaves your machine.
 
+(Screenshots at the end)
+
 ## Overview
 
 Inspired by **Ed Donner's AI Engineer Core Track**, this assistant connects to the Gmail API, processes unread or specific folder emails, and allows for natural language querying through a Gradio interface.
@@ -109,6 +111,11 @@ Start the Gradio web interface.
 python app.py
 
 ```
+
+## Screenshots
+<img width="1875" height="926" alt="Screenshot 2026-01-03 151213" src="https://github.com/user-attachments/assets/43c294e0-61ad-4b0b-b9ac-359bcd4bd8a9" />
+<img width="1889" height="869" alt="Screenshot 2026-01-03 150722" src="https://github.com/user-attachments/assets/329039e7-9c61-49ad-b603-b41e082e7beb" />
+
 
 ## Limitations & Future Work
 
