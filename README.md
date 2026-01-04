@@ -124,6 +124,11 @@ python app.py
 * **Future Enhancements:** 
   * Implementation of **ThreadIDs** to maintain conversation context across multiple related emails.
   * Support for attachment parsing (PDF/Docx) within emails.
+  * Adding evaluation scripts to assess RAG metrics
+    * Mean Reciprocal Rank (MRR)
+    * Normalized Discounted Cumulative Gain (nDCG)
+    * Recall@K
+    * Precision@K
 
 
 
