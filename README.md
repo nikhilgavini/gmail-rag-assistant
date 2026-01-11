@@ -3,6 +3,7 @@
 A privacy-first Personal Knowledge Worker that transforms your Gmail inbox into a searchable knowledge base. 
 
 This project implements a full Retrieval-Augmented Generation (RAG) pipeline using local LLMs (Ollama) to ensure your data never leaves your machine.
+* Note that the user can swap to an open-source or frontier LLM to trade privacy for performance.
 
 (Screenshots at the end)
 
