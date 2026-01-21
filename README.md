@@ -58,7 +58,7 @@ The results are then merged to create a comprehensive candidate pool.
 
 #### 3. LLM-Based Re-ranking
 
-Because vector search (ChromaDB) can sometimes return "noisy" results, a secondary LLM pass acts as a re-ranker. 
+Because vector search (ChromaDB in this case) can sometimes return "noisy" results, a secondary LLM pass acts as a re-ranker. 
 
 It evaluates the candidate chunks against the original question and prioritizes only the most relevant snippets for the final answer.
 
