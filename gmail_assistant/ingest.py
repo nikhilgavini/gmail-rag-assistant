@@ -14,15 +14,9 @@ import time
 
 load_dotenv(override=True)
 ###############################################################################
-# MODELS (Chunking and Embedding)
+# MODELS
 ###############################################################################
-## Chunking Model
 MODEL = config.CHUNKING_MODEL
-
-## Local Embedding Model
-local_embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
-    model_name="all-MiniLM-L6-v2"
-)
 
 ###############################################################################
 # VECTOR DB INFO
@@ -77,8 +71,7 @@ class Chunks(BaseModel):
 def fetch_emails(service, max_results):
     emails = []
     # Loop through all of the folders
-    #for folder in get_list_of_folders(service):
-    for folder in ['SPAM']:
+    for folder in get_list_of_folders(service):
         print(f"Looking in {folder} folder.")
         messages = get_email_messages(service, max_results=max_results, folder_name=folder)
         # Extract the details and add them to the emails list of dicts
@@ -133,7 +126,8 @@ def make_messages(document):
 def process_document(document):
     # If running into issues with ollama, uncommment this so you can truncate to 2000 tokens
     #doc_to_process = document.copy()
-    #doc_to_process["text"] = document["text"][:2000]    # Truncate because you can usually identify phishing attempts in the first 1500 words
+    #doc_to_process["text"] = document["text"][:2000] 
+    #messages = make_messages(doc_to_process)
     
     messages = make_messages(document)
     response = completion(
@@ -160,7 +154,7 @@ def create_chunks(documents):
             result = process_document(doc)
             chunks.extend(result)
             
-            # Add a 10-second 'Cool Down' to avoid RPM limits
+            # Add a 10-second Cool Down to avoid RPM limits if using frontier models on free tier
             # Groq Free tier usually allows ~3-14 requests per minute
             time.sleep(10) 
             
