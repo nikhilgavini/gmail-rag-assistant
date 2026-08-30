@@ -8,16 +8,22 @@ IDENTITY_PATH = str(BASE_DIR / "identity")
 CREDENTIALS_FILE = str(IDENTITY_PATH / "credentials.json")
 TOKEN_FILE = str(IDENTITY_PATH / "token.json")
 
-# Model Configuration
-# Note: Using 1b locally; higher models recommended if hardware allows or even frontier models if privacy not an issue
-CHUNKING_MODEL = "ollama/llama3.2:1b" 
+# Chunking / Answering Model
+CHUNKING_MODEL = "ollama/phi3.5:3.8b-mini-instruct-q4_K_M"
 AVERAGE_CHUNK_SIZE = 1000
 COLLECTION_NAME = "new_emails"
-MAX_RESULTS = 1
 
-# Local Embedding Configuration
-EMBEDDING_FUNCTION = embedding_functions.SentenceTransformerEmbeddingFunction(
-    model_name="all-MiniLM-L6-v2"
+# How many emails to pull per ingest run.
+# None = all messages in the folder(s) configured in ingest.py's fetch_emails()
+MAX_RESULTS = None
+
+# Embedding Configuration
+EMBEDDING_MODEL_NAME = "nomic-embed-text:v1.5"
+OLLAMA_EMBEDDING_URL = "http://localhost:11434/api/embeddings"
+
+EMBEDDING_FUNCTION = embedding_functions.OllamaEmbeddingFunction(
+    url=OLLAMA_EMBEDDING_URL,
+    model_name=EMBEDDING_MODEL_NAME,
 )
 
 # Gmail Scopes
