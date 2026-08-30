@@ -102,7 +102,7 @@ def fetch_emails(service, max_results, since_query=None):
             if msg['id'] in seen_ids:
                 continue
             seen_ids.add(msg['id'])
-            
+
             details = get_email_message_details(service, msg['id'])
             if details:
                 details['metadata']['folder'] = folder
@@ -161,7 +161,8 @@ def process_document(document):
         model=MODEL, 
         messages=messages, 
         response_format=Chunks,
-        timeout=None
+        timeout=None,
+        keep_alive=0,
     )
 
     reply = response.choices[0].message.content
@@ -183,7 +184,7 @@ def create_chunks(documents):
             
             # Add a 10-second Cool Down to avoid RPM limits if using frontier models on free tier
             # Groq Free tier usually allows ~3-14 requests per minute
-            # time.sleep(10) 
+            #time.sleep(10) 
             
         except Exception as e:
             if "rate_limit_exceeded" in str(e).lower():

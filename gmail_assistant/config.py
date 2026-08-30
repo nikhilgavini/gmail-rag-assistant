@@ -5,8 +5,8 @@ from chromadb.utils import embedding_functions
 BASE_DIR = Path(__file__).parent.parent
 DB_PATH = str(BASE_DIR / "email_db")
 IDENTITY_PATH = str(BASE_DIR / "identity")
-CREDENTIALS_FILE = str(IDENTITY_PATH / "credentials.json")
-TOKEN_FILE = str(IDENTITY_PATH / "token.json")
+CREDENTIALS_FILE = str(BASE_DIR / "identity" / "credentials.json")
+TOKEN_FILE = str(BASE_DIR / "identity" / "token.json")
 
 # Chunking / Answering Model
 CHUNKING_MODEL = "ollama/phi3.5:3.8b-mini-instruct-q4_K_M"
@@ -15,7 +15,7 @@ COLLECTION_NAME = "new_emails"
 
 # How many emails to pull per ingest run.
 # None = all messages in the folder(s) configured in ingest.py's fetch_emails()
-MAX_RESULTS = None
+MAX_RESULTS = 5
 
 # Embedding Configuration
 EMBEDDING_MODEL_NAME = "nomic-embed-text:v1.5"
