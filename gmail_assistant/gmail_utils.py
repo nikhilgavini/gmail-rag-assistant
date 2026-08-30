@@ -107,7 +107,7 @@ def get_list_of_folders(service):
 
     if not labels:
       print("No labels found.")
-      return
+      return []
     else:
       labels = list({l['name'] for l in labels if 'name' in l})
       good_labels = [x for x in labels if x not in remove_labels]
@@ -116,7 +116,7 @@ def get_list_of_folders(service):
 ###############################################################################
 # DATA INGEST WITH GMAIL API
 ###############################################################################
-def get_email_messages(service, user_id='me', label_ids=None, folder_name='INBOX', max_results=5):
+def get_email_messages(service, user_id='me', label_ids=None, folder_name='INBOX', max_results=5, query=None):
     messages = []
     next_page_token = None
 
@@ -136,6 +136,7 @@ def get_email_messages(service, user_id='me', label_ids=None, folder_name='INBOX
         result = service.users().messages().list(
             userId = user_id,
             labelIds = label_ids,
+            q = query,
             maxResults = min(500, max_results - len(messages)) if max_results else 500, # This method can only fetch 500 messages per API call
             pageToken = next_page_token
         ).execute()

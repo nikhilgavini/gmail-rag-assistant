@@ -28,3 +28,7 @@ EMBEDDING_FUNCTION = embedding_functions.OllamaEmbeddingFunction(
 
 # Gmail Scopes
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+
+# Tracks unix epoch of last successful ingest
+# Allows for only new messages each time
+LAST_INGEST_FILE = str(BASE_DIR / "last_ingest_epoch.txt")

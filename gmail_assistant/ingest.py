@@ -10,6 +10,7 @@ from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
 from tenacity import retry, wait_exponential, stop_after_attempt
 import config
+import os
 import time
 
 load_dotenv(override=True)
@@ -68,6 +69,21 @@ class Chunks(BaseModel):
 ###############################################################################
 ## RAW DATA INGEST
 ###############################################################################
+def get_since_query():
+    if os.path.exists(config.LAST_INGEST_FILE):
+        with open(config.LAST_INGEST_FILE) as f:
+            epoch = f.read().strip()
+        if epoch:
+            # Small overlap buffer (1 hour) to absorb clock skew
+            # Duplicate emails are still caught
+            # by the existing_ids check below.
+            return f"after:{max(int(epoch) - 3600, 0)}"
+    return None  # first run ever: fetch everything
+
+def save_ingest_checkpoint():
+    with open(config.LAST_INGEST_FILE, "w") as f:
+        f.write(str(int(time.time())))
+
 def fetch_emails(service, max_results):
     emails = []
     # Loop through all of the folders
@@ -156,7 +172,7 @@ def create_chunks(documents):
             
             # Add a 10-second Cool Down to avoid RPM limits if using frontier models on free tier
             # Groq Free tier usually allows ~3-14 requests per minute
-            time.sleep(10) 
+            # time.sleep(10) 
             
         except Exception as e:
             if "rate_limit_exceeded" in str(e).lower():
@@ -201,7 +217,13 @@ if __name__ == "__main__":
     client_secret_file = config.CREDENTIALS_FILE
     service = init_gmail_service(client_secret_file)
 
-    documents = fetch_emails(service, config.MAX_RESULTS)
+    since_query = get_since_query()
+    if since_query:
+        print(f"Incremental run: fetching messages matching '{since_query}'")
+    else:
+        print("First run: fetching all messages (this establishes the checkpoint).")
+
+    documents = fetch_emails(service, config.MAX_RESULTS, since_query=since_query)
     print("Ingestion complete")
     print(f"{len(documents)} total emails found.")
     
@@ -215,3 +237,5 @@ if __name__ == "__main__":
         chunks = create_chunks(new_emails)
         print("Proceeding with embeddings")
         create_embeddings(chunks)
+
+    save_ingest_checkpoint()
