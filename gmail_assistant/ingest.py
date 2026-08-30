@@ -84,14 +84,25 @@ def save_ingest_checkpoint():
     with open(config.LAST_INGEST_FILE, "w") as f:
         f.write(str(int(time.time())))
 
-def fetch_emails(service, max_results):
+def fetch_emails(service, max_results, since_query=None):
     emails = []
+    seen_ids = set()
+
     # Loop through all of the folders
     for folder in get_list_of_folders(service):
         print(f"Looking in {folder} folder.")
-        messages = get_email_messages(service, max_results=max_results, folder_name=folder)
+        messages = get_email_messages(
+            service, 
+            max_results=max_results, 
+            folder_name=folder, 
+            query=since_query
+        )
         # Extract the details and add them to the emails list of dicts
         for msg in messages:
+            if msg['id'] in seen_ids:
+                continue
+            seen_ids.add(msg['id'])
+            
             details = get_email_message_details(service, msg['id'])
             if details:
                 details['metadata']['folder'] = folder
