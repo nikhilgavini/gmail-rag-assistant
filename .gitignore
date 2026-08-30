@@ -10,5 +10,6 @@ email_db/
 __pycache__/
 .env
 venv/
+gmail_venv/
 .gmail_rag/
 .ipynb_checkpoints/
