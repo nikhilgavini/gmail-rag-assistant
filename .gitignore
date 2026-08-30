@@ -1,6 +1,7 @@
 # Google API Secrets
 credentials.json
 token.json
+identity/
 
 # Local Databases
 email_db/
@@ -9,4 +10,5 @@ email_db/
 __pycache__/
 .env
 venv/
+.gmail_rag/
 .ipynb_checkpoints/

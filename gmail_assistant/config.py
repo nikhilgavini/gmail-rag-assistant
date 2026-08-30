@@ -4,8 +4,9 @@ from chromadb.utils import embedding_functions
 # Project Paths
 BASE_DIR = Path(__file__).parent.parent
 DB_PATH = str(BASE_DIR / "email_db")
-CREDENTIALS_FILE = str(BASE_DIR / "credentials.json")
-TOKEN_FILE = str(BASE_DIR / "token.json")
+IDENTITY_PATH = str(BASE_DIR / "identity")
+CREDENTIALS_FILE = str(IDENTITY_PATH / "credentials.json")
+TOKEN_FILE = str(IDENTITY_PATH / "token.json")
 
 # Model Configuration
 # Note: Using 1b locally; higher models recommended if hardware allows or even frontier models if privacy not an issue
