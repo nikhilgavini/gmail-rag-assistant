@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from chromadb.utils import embedding_functions
 
@@ -8,9 +9,9 @@ IDENTITY_PATH = str(BASE_DIR / "identity")
 CREDENTIALS_FILE = str(BASE_DIR / "identity" / "credentials.json")
 TOKEN_FILE = str(BASE_DIR / "identity" / "token.json")
 
-# Chunking / Answering Model
-CHUNKING_MODEL = "ollama/phi3.5:3.8b-mini-instruct-q4_K_M"
+# Chunking
 AVERAGE_CHUNK_SIZE = 1000
+CHUNK_OVERLAP = int(AVERAGE_CHUNK_SIZE * 0.2)
 COLLECTION_NAME = "new_emails"
 
 # How many emails to pull per ingest run.
@@ -24,7 +25,14 @@ OLLAMA_EMBEDDING_URL = "http://localhost:11434/api/embeddings"
 EMBEDDING_FUNCTION = embedding_functions.OllamaEmbeddingFunction(
     url=OLLAMA_EMBEDDING_URL,
     model_name=EMBEDDING_MODEL_NAME,
+    timeout=120 # So we have enough headroom
 )
+
+# Inference Configuration
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+print(f"[config] Ollama host: {OLLAMA_HOST}")
+INFERENCE_MODEL = "phi3.5:3.8b-mini-instruct-q4_K_M"
+RETRIEVAL_K = 10
 
 # Gmail Scopes
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
