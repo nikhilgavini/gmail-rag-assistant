@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from chromadb import PersistentClient
 from chromadb.utils import embedding_functions
 from litellm import completion
+import ollama
 from pydantic import BaseModel, Field
 from pathlib import Path
 from tenacity import retry, wait_exponential
@@ -12,7 +13,10 @@ load_dotenv(override=True)
 ###############################################################################
 # MODELS
 ###############################################################################
-MODEL = config.CHUNKING_MODEL
+MODEL = config.INFERENCE_MODEL
+_ollama_client = ollama.Client(
+    host = config.OLLAMA_HOST
+)
 
 ###############################################################################
 # VECTOR DB INFO
@@ -27,8 +31,8 @@ collection = chroma.get_or_create_collection(
 # RETRY AND RETRIEVAL PARAMS
 ###############################################################################
 wait = wait_exponential(multiplier=1, min=10, max=240)
-RETRIEVAL_K = 20
-FINAL_K = 10
+RETRIEVAL_K = 10
+FINAL_K = 5
 
 SYSTEM_PROMPT = """
 You are a knowledgeable, friendly assistant to parse through the user's emails.
@@ -53,6 +57,29 @@ class RankOrder(BaseModel):
     order: list[int] = Field(
         description="The order of relevance of chunks, from most relevant to least relevant, by chunk id number"
     )
+
+
+###############################################################################
+# --- CONTENT NORMALIZATION ---
+###############################################################################
+def _normalize_content(content) -> str:
+    """
+    Flatten Gradio's various content formats into a plain string for ollama
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, dict):
+        return content.get("text", str(content))
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                parts.append(item.get("text", ""))
+            else:
+                parts.append(str(item))
+        return " ".join(filter(None, parts))
+    return str(content)
+
 
 ###############################################################################
 # ADVANCED RAG METHODS
@@ -84,14 +111,22 @@ Reply only with the list of ranked chunk ids, nothing else. Include all the chun
     return [chunks[i - 1] for i in order]
 
 
-def make_rag_messages(question, history, chunks):
+def make_rag_messages(question: str, history: list[dict], chunks: list[Result]) -> list[dict]:
     context = "\n\n".join(
-        f"Extract from {chunk.metadata['source']}:\n{chunk.page_content}" for chunk in chunks
+        f"Extract from {chunk.metadata['source']}:\n{chunk.page_content}"
+        for chunk in chunks
     )
+    
     system_prompt = SYSTEM_PROMPT.format(context=context)
+
+    normalized_history = [
+        {"role": msg["role"], "content": _normalize_content(msg["content"])}
+        for msg in history
+    ]
+
     return (
         [{"role": "system", "content": system_prompt}]
-        + history
+        + normalized_history
         + [{"role": "user", "content": question}]
     )
 
@@ -126,17 +161,22 @@ def merge_chunks(chunks, reranked):
     return merged
 
 
-def fetch_context_unranked(question):
-    results = collection.query(
-        query_texts=[question], 
-        n_results=RETRIEVAL_K
-    )
-    
-    chunks = []
-    # Map the results back to your Result Pydantic model
-    for doc, meta in zip(results["documents"][0], results["metadatas"][0]):
-        chunks.append(Result(page_content=doc, metadata=meta))
-    return chunks
+def fetch_context_unranked(question: str) -> list[Result]:
+    try:
+        results = collection.query(
+            query_texts=[question],
+            n_results=config.RETRIEVAL_K,
+            include=["documents", "metadatas"]
+        )
+
+        chunks = []
+        for doc, meta in zip(results['documents'][0], results['metadatas'][0]):
+            chunks.append(Result(page_content=doc, metadata=meta))
+
+        return chunks
+    except Exception as e:
+        print(f"Error fetching raw context: {e}")
+        return []
 
 
 def fetch_context(original_question):
@@ -151,11 +191,47 @@ def fetch_context(original_question):
 # MAIN ANSWERING
 ###############################################################################
 @retry(wait=wait)
-def answer_question(question: str, history: list[dict] = []) -> tuple[str, list]:
+def answer_question(question: str, history: list[dict] | None = None) -> tuple[str, list]:
     """
     Answer a question using RAG and return the answer and the retrieved context
     """
-    chunks = fetch_context(question)
-    messages = make_rag_messages(question, history, chunks)
-    response = completion(model=MODEL, messages=messages)
-    return response.choices[0].message.content, chunks
+    try:
+        question = _normalize_content(question)
+
+        if history is None:
+            history = []
+
+        # Directly fetch unranked chunks
+        # chunks = fetch_context(question, history)
+        chunks = fetch_context_unranked(question)
+        # Build structured message list
+        rag_messages = make_rag_messages(question, history, chunks)
+
+        response_stream = _ollama_client.chat(
+            model=MODEL,
+            messages = rag_messages,
+            stream = True
+        )
+        
+        accumulated_answer = ""
+        
+        for chunk in response_stream:
+            token = chunk.get('message', {}).get('content', '')
+            accumulated_answer += token
+            
+            yield accumulated_answer, chunks
+
+    except ollama.ResponseError as e:
+        print(
+            f"[answer] Ollama model error: {e}\n"
+            f"Run: ollama pull {MODEL}"
+        )
+        return None, []
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(
+            f"[answer] Inference error: {e}\n"
+            "Is Ollama running? Try: ollama serve"
+        )
+        return None, []
